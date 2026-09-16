@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>20 Minute Typing Test</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f3f4f6;
+    color: #222;
+}
+
+.container {
+    width: 92%;
+    max-width: 1200px;
+    margin: 25px auto;
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.instructions {
+    background: #fff3cd;
+    padding: 14px;
+    border-radius: 8px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.stats {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.stat {
+    background: white;
+    min-width: 150px;
+    padding: 12px 25px;
+    text-align: center;
+    border-radius: 10px;
+    box-shadow: 0 2px 7px rgba(0,0,0,0.12);
+}
+
+.stat strong {
+    display: block;
+    font-size: 27px;
+    margin-top: 5px;
+}
+
+/* TYPING AREA */
+
+.typing-container {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+}
+
+#typingText {
+    font-size: 25px;
+    line-height: 1.8;
+    letter-spacing: 1px;
+    min-height: 300px;
+    outline: none;
+    cursor: text;
+    user-select: none;
+}
+
+/* Characters */
+
+.char {
+    position: relative;
+}
+
+.correct {
+    color: #198754;
+}
+
+.incorrect {
+    color: #dc3545;
+    background: #ffd6d6;
+}
+
+.current {
+    background: #ffe69c;
+    border-radius: 3px;
+}
+
+/* Buttons */
+
+.buttons {
+    text-align: center;
+    margin-top: 25px;
+}
+
+button {
+    padding: 12px 30px;
+    margin: 5px;
+    border: none;
+    border-radius: 7px;
+    font-size: 17px;
+    cursor: pointer;
+}
+
+#startBtn {
+    background: #198754;
+    color: white;
+}
+
+#restartBtn {
+    background: #0d6efd;
+    color: white;
+}
+
+button:hover {
+    opacity: 0.85;
+}
+
+#result {
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+    margin-top: 20px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>⌨️ 20 Minute Typing Test</h1>
+
+<div class="instructions">
+    Click <strong>START TEST</strong>, then type directly on the text.
+    Pay attention to <strong>CAPITAL LETTERS</strong> and periods.
+</div>
+
+<div class="stats">
+
+    <div class="stat">
+        TIME
+        <strong id="time">20:00</strong>
+    </div>
+
+    <div class="stat">
+        WPM
+        <strong id="wpm">0</strong>
+    </div>
+
+    <div class="stat">
+        ACCURACY
+        <strong id="accuracy">100%</strong>
+    </div>
+
+    <div class="stat">
+        ERRORS
+        <strong id="errors">0</strong>
+    </div>
+
+</div>
+
+<div class="typing-container">
+
+    <!-- Students type directly into this text -->
+
+    <div id="typingText" tabindex="0"></div>
+
+    <div class="buttons">
+
+        <button id="startBtn" onclick="startTest()">
+            START TEST
+        </button>
+
+        <button id="restartBtn" onclick="restartTest()">
+            RESTART
+        </button>
+
+    </div>
+
+    <div id="result"></div>
+
+</div>
+
+</div>
+
+
+<script>
+
+/* ==========================================
+   TYPING TEXT
+========================================== */
+
+const text = `
+The Quick Brown Fox Jumps Over The Lazy Dog.
+ALL GOOD STUDENTS PRACTICE TYPING EVERY DAY.
+Learning To Type Quickly And Accurately Takes Practice.
+GOOD TYPING HABITS HELP YOU WORK FASTER.
+Always Keep Your Fingers On The HOME ROW.
+LOOK AT THE SCREEN AND KEEP YOUR HANDS RELAXED.
+Practice Makes Your Typing Faster And Better.
+THE BEST WAY TO IMPROVE IS TO PRACTICE EVERY DAY.
+Keep Your Eyes On The Text And Not On Your Keyboard.
+GOOD LUCK AND KEEP PRACTICING.
+`;
+
+const typingText =
+    document.getElementById("typingText");
+
+let typedText = "";
+
+let started = false;
+
+let timeLeft = 20 * 60;
+
+let timer;
+
+let startTime;
+
+
+/* ==========================================
+   DISPLAY TEXT
+========================================== */
+
+function displayText() {
+
+    typingText.innerHTML = "";
+
+    for (let i = 0; i < text.length; i++) {
+
+        const span =
+            document.createElement("span");
+
+        span.className = "char";
+
+        span.textContent = text[i];
+
+        if (i === 0) {
+            span.classList.add("current");
+        }
+
+        typingText.appendChild(span);
+    }
+}
+
+displayText();
+
+
+/* ==========================================
+   START TEST
+========================================== */
+
+function startTest() {
+
+    if (started) return;
+
+    started = true;
+
+    typedText = "";
+
+    startTime = new Date();
+
+    typingText.focus();
+
+    timer = setInterval(() => {
+
+        timeLeft--;
+
+        updateTimer();
+
+        updateResults();
+
+        if (timeLeft <= 0) {
+
+            finishTest();
+
+        }
+
+    }, 1000);
+
+}
+
+
+/* ==========================================
+   DIRECT TYPING
+========================================== */
+
+typingText.addEventListener(
+    "keydown",
+    function(event) {
+
+        if (!started) return;
+
+        /*
+        Allow Backspace
+        */
+
+        if (event.key === "Backspace") {
+
+            event.preventDefault();
+
+            if (typedText.length > 0) {
+
+                typedText =
+                    typedText.slice(0, -1);
+
+                updateDisplay();
+                updateResults();
+
+            }
+
+            return;
+        }
+
+
+        /*
+        Ignore Ctrl / Alt / Meta shortcuts
+        */
+
+        if (
+            event.ctrlKey ||
+            event.altKey ||
+            event.metaKey
+        ) {
+            return;
+        }
+
+
+        /*
+        Only accept normal characters
+        */
+
+        if (event.key.length === 1) {
+
+            event.preventDefault();
+
+            if (
+                typedText.length < text.length
+            ) {
+
+                typedText += event.key;
+
+                updateDisplay();
+                updateResults();
+
+            }
+
+        }
+
+    }
+);
+
+
+/* ==========================================
+   UPDATE TEXT DISPLAY
+========================================== */
+
+function updateDisplay() {
+
+    const characters =
+        typingText.querySelectorAll(".char");
+
+    let errorCount = 0;
+
+
+    characters.forEach(
+        (character, index) => {
+
+            character.classList.remove(
+                "correct",
+                "incorrect",
+                "current"
+            );
+
+
+            if (index < typedText.length) {
+
+                if (
+                    typedText[index] === text[index]
+                ) {
+
+                    character.classList.add(
+                        "correct"
+                    );
+
+                } else {
+
+                    character.classList.add(
+                        "incorrect"
+                    );
+
+                    errorCount++;
+
+                }
+
+            }
+
+        }
+    );
+
+
+    /*
+    Highlight the next character
+    */
+
+    if (
+        typedText.length < text.length
+    ) {
+
+        characters[
+            typedText.length
+        ].classList.add("current");
+
+    }
+
+
+    document.getElementById("errors")
+        .textContent = errorCount;
+
+}
+
+
+/* ==========================================
+   UPDATE TIMER
+========================================== */
+
+function updateTimer() {
+
+    let minutes =
+        Math.floor(timeLeft / 60);
+
+    let seconds =
+        timeLeft % 60;
+
+
+    if (seconds < 10) {
+
+        seconds = "0" + seconds;
+
+    }
+
+
+    document.getElementById("time")
+        .textContent =
+        minutes + ":" + seconds;
+
+}
+
+
+/* ==========================================
+   UPDATE WPM AND ACCURACY
+========================================== */
+
+function updateResults() {
+
+    if (typedText.length === 0) {
+
+        document.getElementById("wpm")
+            .textContent = "0";
+
+        document.getElementById("accuracy")
+            .textContent = "100%";
+
+        return;
+
+    }
+
+
+    let correctCharacters = 0;
+
+
+    for (
+        let i = 0;
+        i < typedText.length;
+        i++
+    ) {
+
+        if (
+            typedText[i] === text[i]
+        ) {
+
+            correctCharacters++;
+
+        }
+
+    }
+
+
+    let elapsedSeconds =
+        (new Date() - startTime) / 1000;
+
+
+    if (elapsedSeconds < 1) {
+
+        elapsedSeconds = 1;
+
+    }
+
+
+    let minutes =
+        elapsedSeconds / 60;
+
+
+    /*
+    Standard typing calculation:
+    5 characters = 1 word
+    */
+
+    let words =
+        correctCharacters / 5;
+
+
+    let wpm =
+        Math.round(words / minutes);
+
+
+    let accuracy =
+        Math.round(
+            (correctCharacters /
+            typedText.length) * 100
+        );
+
+
+    document.getElementById("wpm")
+        .textContent = wpm;
+
+
+    document.getElementById("accuracy")
+        .textContent =
+        accuracy + "%";
+
+}
+
+
+/* ==========================================
+   FINISH TEST
+========================================== */
+
+function finishTest() {
+
+    clearInterval(timer);
+
+    started = false;
+
+    updateResults();
+
+    document.getElementById("result")
+        .textContent =
+        "TIME'S UP! YOUR FINAL SCORE IS SHOWN ABOVE.";
+
+}
+
+
+/* ==========================================
+   RESTART
+========================================== */
+
+function restartTest() {
+
+    clearInterval(timer);
+
+    started = false;
+
+    timeLeft = 20 * 60;
+
+    typedText = "";
+
+    document.getElementById("time")
+        .textContent = "20:00";
+
+    document.getElementById("wpm")
+        .textContent = "0";
+
+    document.getElementById("accuracy")
+        .textContent = "100%";
+
+    document.getElementById("errors")
+        .textContent = "0";
+
+    document.getElementById("result")
+        .textContent = "";
+
+    displayText();
+
+    typingText.focus();
+
+}
+
+</script>
+
+</body>
+</html>
